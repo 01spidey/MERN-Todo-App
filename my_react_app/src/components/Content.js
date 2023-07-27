@@ -102,7 +102,7 @@ const Content = () => {
 
     // Delete Task
     const deleteTask = ()=>{
-      axios.delete(`${API_URL}/deleteTask/${deletePopup.id}`)
+      axios.delete(`${API_URL}/deleteTask/${curListItem.original_id}/${deletePopup.id}`)
       .then(
         (res)=> {
           if(res.data.success){
@@ -159,6 +159,14 @@ const Content = () => {
         }
       }
 
+      let putData = {
+        list_id : curListItem.original_id,
+        task_obj : {
+          id : task_id,
+          task : newTask.trim()
+        }
+      }
+
       if(action==='add'){
         axios.post(`${API_URL}/addTask`, postData).then(
           (res)=> {console.log(res); getTasksofList(curListItem)}
@@ -168,7 +176,7 @@ const Content = () => {
 
       }else{
         // id = task_id
-        axios.put(`${API_URL}/updateTask`, {id : task_id, task : newTask.trim()})
+        axios.put(`${API_URL}/updateTask`, putData)
         .then(
           (res)=> {
             if(res.data.success){

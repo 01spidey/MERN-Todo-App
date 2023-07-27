@@ -116,24 +116,53 @@ app.post('/addTask', async (req, res) => {
 // Edit Existing Task
 app.put('/updateTask', async (req, res) => {
 
-    let task_id = req.body.id
-    let new_task = req.body.task
+    let list_id = req.body.list_id
+    let task_id = req.body.task_obj.id
+    let new_task = req.body.task_obj.task
+    
 
     try{
-        await Task.findByIdAndUpdate(
-            task_id,
-            {task: new_task},
-            {new: true}
+        // console.log(req.body)
+
+        await TaskList.findById(list_id).then(
+            async (result)=> {
+                let tasks = result.tasks
+
+                tasks.forEach((task)=> {
+                    if(task_id===task._id.toString()) {
+                        console.log(task)
+                        task.task = new_task
+                    }
+                })
+                
+                // console.log(tasks)
+
+                result.tasks = tasks
+
+                await result.save()
+                .then(
+                    ()=> {
+                        res.status(200).send(
+                            {
+                                success: true,
+                                message: 'Task Edited Successfully!!'
+                            }
+                        )
+                    }
+                )
+                .catch(
+                    (err)=> {
+                        console.log(err)
+                        res.status(500).send(
+                            {
+                                success: false,
+                                message: 'Task Edit Failed!!'
+                            }
+                        )
+                    }
+                )
+            }
         )
-        .then(()=> {
-            console.log('Task Edited Successfully!!')
-            res.status(200).send(
-                {
-                    success: true,
-                    message: 'Task Edited Successfully!!'
-                }
-            )
-        })
         .catch((err)=> {
             console.log(err)
             res.status(500).send(
@@ -220,17 +249,36 @@ app.put('/handleTask', async (req, res) => {
 })
 
 // Delete Task
-app.delete('/deleteTask/:id', async (req, res) => {
+app.delete('/deleteTask/:list_id/:task_id', async (req, res) => {
     try{
-        let task_id = req.params.id
-        console.log(task_id)
+        let list_id = req.params.list_id
+        let task_id = req.params.task_id
+        // console.log(list_id, task_id)
 
-        await Task.findByIdAndDelete(
-            task_id,
-        ).then(
-            ()=>{
-                res.status(200).send(
-                    {success: true, message: 'Task Deleted Successfully!!'}
+        await TaskList.findById(list_id)
+        .then(
+            async (result)=>{
+                let tasks = result.tasks
+                let newTasks = tasks.filter((task)=> task._id.toString()!==task_id)
+                result.tasks = newTasks
+                await result.save().then(
+                    ()=>{
+                        console.log('Task Deleted Successfully!!')
+                        res.status(200).send(
+                            {
+                                success: true,
+                                message: 'Task Deleted Successfully!!'
+                            }
+                        )
+                    }
+                )
+                .catch(
+                    (err)=>{
+                        console.log(err)
+                        res.status(500).send(
+                            {success: false, message: 'Task Deletion Failed!!'}
+                        )
+                    }
                 )
             }
         ).catch(
