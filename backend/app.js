@@ -1,8 +1,14 @@
 
 const express = require('express')
 const cors = require('cors')
+
 const mongoose = require("mongoose");
-const {Task} = require('./models/taskModel')
+// const {Task, } = require('./models/taskModel')
+// const {TaskList} = require('./models/taskListModel')
+
+const Task = require('./models/models').Task
+const TaskList = require('./models/models').TaskList
+
 const bodyParser = require('body-parser')
 
 
@@ -32,9 +38,12 @@ app.get('/', (req, res) => {
 })
 
 // Get All Tasks
-app.get('/getTasks', async (req, res) => {
+app.get('/getTasks/:id', async (req, res) => {
     try{
-        let all_tasks = await Task.find({})
+        let list_id = req.params.id;
+        console.log(list_id)
+        let all_tasks = await TaskList.findById(list_id)
+        all_tasks = all_tasks.tasks
         let data = []
         let a = 1;
         all_tasks.forEach((task)=>{
@@ -45,8 +54,6 @@ app.get('/getTasks', async (req, res) => {
                 checked: task.checked
             })
         })
-
-        // console.log(data)
         res.status(200).send(
             {
                 success: true,
@@ -55,7 +62,8 @@ app.get('/getTasks', async (req, res) => {
         )
     }
     catch(err){
-        res.status(500).json(
+        console.log(err)
+        res.status(500).send(
             {
                 success: false,
                 tasks: null
@@ -66,28 +74,41 @@ app.get('/getTasks', async (req, res) => {
 })
 
 // Add New Task
-app.post('/addTask', 
-    async (req, res) => {
+app.post('/addTask', async (req, res) => {
         try{
-            
             console.log(req.body)
-            let newTask = new Task(req.body)
+            let list_id = req.body.list_id
+            let newTask = req.body.task_obj
             
-            await newTask.save().then(()=> console.log('Task Added Successfully!!'))
-            .catch((err)=> console.log(err))
-
-            res.status(200).json(
-                {
-                    success: true,
-                    message: 'Task Added Successfully!!'
+            await TaskList.findByIdAndUpdate(
+                list_id,
+                {$push: {tasks: newTask}}
+            ).then(
+                ()=>{
+                    res.status(200).send(
+                        {
+                            success: true,
+                            message: 'Task Added Successfully!!'
+                        }
+                    )
+                }
+            ).catch(
+                (err)=>{
+                    console.log(err)
+                    res.status(500).send(
+                        {
+                            success: false,
+                            message: 'Error While Adding Task!!'
+                        }
+                    )
                 }
             )
         }
 
         catch(e){
             console.log(e)
-            res.status(500).json(
-                {success: false, message : e}
+            res.status(500).send(
+                {success: false, message : 'Error While Adding Task!!'}
             )
         }
 })
@@ -138,27 +159,53 @@ app.put('/handleTask', async (req, res) => {
     try{
         let task_id = req.body.id
         let action = req.body.action
-        console.log(task_id)
-        
-        await Task.findByIdAndUpdate(
-            task_id,
-            {checked : action},
-            {new : true}
-        ).then(
-            ()=> {
-                res.status(200).send(
-                    {success: true, message: `Task ${action?'Finished' : 'Retrieved'} Successfully!!`}
+        let list_id = req.body.list_id
+
+        console.log(req.body)
+
+        await TaskList.findById(list_id).then(
+            async (result)=>{
+                let tasks = result.tasks
+                let a=0
+                tasks.forEach((task)=>{
+                    if(task_id===a++) task.checked = action
+                })
+                result.tasks = tasks
+                await result.save().then(
+                    ()=> {
+                        console.log('Task Updated Successfully!!')
+                        res.status(200).send(
+                            {
+                                success: true,
+                                message: `Task ${action?'Finished' : 'Retrieved'} Successfully!!`
+                            }
+                        )
+                    }
+                ).catch(
+                    (err)=> {
+                        console.log(err)
+                        res.status(500).send(
+                            {
+                                success: true,
+                                message: `Error occured while ${action?'Finishing' : 'Retrieving'} Task!!`
+                            }
+                        )
+                    }
                 )
             }
-        )
-        .catch(
+        ).catch(
             (err)=>{
                 console.log(err)
                 res.status(500).send(
-                    { success: false, message: 'Some Technical Error!!'}
+                    {
+                        success: false,
+                        message: 'Some Technical Error!!'
+                    }
                 )
             }
         )
+
+        
 
         
     }
@@ -205,4 +252,178 @@ app.delete('/deleteTask/:id', async (req, res) => {
     }
 })
 
+
+
+// ---------------------------------------------------------------
+
+// Get All Lists
+app.get('/getLists', async (req, res) => {
+    try{
+        // let all_lists = await List.find({})
+        let all_lists = [ ]
+        let data = []
+        let a = 1;
+        all_lists = await TaskList.find({})
+
+        console.log(all_lists)
+        
+        all_lists.forEach((list)=>{
+            data.push({
+                original_id : list._id,
+                id: a++,
+                name: list.name,
+            })
+        })
+
+        // console.log(data)
+        res.status(200).send(
+            {
+                success: true,
+                lists: data
+            }
+        )
+    }
+    catch(err){
+        console.log(err)
+        res.status(500).json(
+            {
+                success: false,
+                lists: null
+            }
+        )
+    }
+    
+
+})
+
+// Add New List
+app.post('/addList', async(req, res)=>{
+    try{
+        console.log(req.body)
+        TaskList.findOne({name : req.body.name}).then(
+            async (result)=>{
+                if(result===null){
+                    
+                    let newTaskList = new TaskList(req.body)
+                    
+                    await newTaskList.save().then(()=> console.log('List Added Successfully!!'))
+                    .catch((err)=> console.log(err))
+
+                    res.status(200).send(
+                        {
+                            success: true,
+                            message: 'List Added Successfully!!'
+                        }
+                    )
+                }else{
+                    res.status(200).send(
+                        {
+                            success: false,
+                            message: 'List Already Exists!!'
+                        }
+                    )
+                }
+            }
+        ).catch(
+            (err) => {
+                console.log(err);
+                res.status(500).send(
+                    {
+                        success: false,
+                        message: 'List Addition Failed!!'
+                    }
+                )
+            }
+        )
+
+        
+    }
+    catch(err){
+        res.status(500).send(
+            {
+                success: false,
+                message: 'List Addition Failed!!'
+            }
+        )
+    }
+
+})
+
+// Edit Existing List
+app.put('/updateList', async (req, res) => {
+    try{
+        // console.log(req.body)
+        let list_id = req.body.list_id
+        let newListName = req.body.name
+
+        
+        TaskList.findByIdAndUpdate(
+            list_id,
+            {name: newListName},
+            {new: true}
+        ).then(
+            (result)=> {
+                console.log(result)
+                res.status(200).send(
+                    {
+                        success: true,
+                        message: 'List Edited Successfully!!'  
+                    }
+                )
+            }
+        ).catch(
+            (err)=>{
+                console.log(err)
+                res.status(500).send(
+                    {
+                        success: false,
+                        message: 'List Edit Failed!!'
+                    }
+                )
+            }
+        )
+    }
+    catch(err){
+        res.status(500).send(
+            {
+                success: false,
+                message: 'List Edit Failed!!'
+            }
+        )
+    }
+
+})
+
+// Delete List
+app.delete('/deleteList/:id', async (req, res) => {
+    try{
+        let list_id = req.params.id
+        console.log(list_id)
+
+        await TaskList.findByIdAndDelete(
+            list_id,
+        ).then(
+            ()=>{
+                res.status(200).send(
+                    {success: true, message: 'List Deleted Successfully!!'}
+                )
+            }
+        ).catch(
+            (err)=>{
+                console.log(err)
+                res.status(500).send(
+                    {success: false, message: 'List Deletion Failed!!'}
+                )
+            }
+        )
+    }
+    catch(err){
+        res.status(500).send(
+            {
+                success: false,
+                message: 'List Deletion Failed!!'
+            }
+        )
+    }
+})
 
