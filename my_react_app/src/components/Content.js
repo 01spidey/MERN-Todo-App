@@ -8,7 +8,7 @@ import axios from 'axios';
 import { IoMdListBox } from 'react-icons/io';
 import { HiMenu } from 'react-icons/hi';
 import {InfinitySpin } from  'react-loader-spinner'
-import { RiMenuUnfoldFill } from 'react-icons/ri';
+import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 
 const Content = () => {
 
@@ -39,21 +39,13 @@ const Content = () => {
       getLists(null)
     }, [])
 
-    // const addList = () => {
-    //   setNewList('')
-    //   setShowPopup(true)
-    //   setAddListPopup(true)
-    // }
 
     const getLists = (flag) => {
       try{
-        // setLoader(true)
-        // setShowPopup(true)
 
         axios.get(`${API_URL}/getLists`).then(
             (res)=> {
               setListItems(res.data.lists)
-              // console.log(res.data.lists)
 
               if(flag===null){
                 setCurListItem(res.data.lists[0])
@@ -83,7 +75,6 @@ const Content = () => {
       }
     }
 
-    // Finish (or) Retrieve Task
     const handleTask = (target_task, action) => {
 
       axios.put(`${API_URL}/handleTask`, {id :(target_task.id-1), list_id : curListItem.original_id, action : action}).then(
@@ -253,6 +244,36 @@ const Content = () => {
       )
     }
 
+    const handleDragEnd = (result)=>{
+      console.log(result)
+
+      if(!result.destination) return;
+      const [source_ind, dest_ind] = [result.source.index, result.destination.index];
+      const itemsCopy = [...items];
+
+      let temp = itemsCopy[source_ind];
+      itemsCopy[source_ind] = itemsCopy[dest_ind];
+      itemsCopy[dest_ind] = temp;
+      let a = 1;
+      itemsCopy.forEach(
+        (item)=> item.id = a++
+      )
+      // setItems(itemsCopy)
+
+      axios.put(`${API_URL}/reorderTasks`, {list_id : curListItem.original_id, tasks : itemsCopy})
+      .then(
+        (res)=> {
+          if(res.data.success){
+            console.log(res); 
+            getTasksofList(curListItem)
+          }else console.log(res.data.message)
+        }
+      ).catch(
+        (err)=> console.log(err)
+      )
+
+    }
+
   return ( 
 
     <div className="main-box">
@@ -266,7 +287,7 @@ const Content = () => {
         <div className="top-box">
           <div className="temp">
             <h1 className="title">Lists</h1>
-            <HiMenu id='ham-icon' onClick={()=>{setShowSideBar(!showSideBar)}} />
+              <HiMenu id='ham-icon' onClick={()=>{setShowSideBar(!showSideBar)}} />
           </div>
 
           <div className="add-list no-select" onClick={
@@ -288,7 +309,7 @@ const Content = () => {
             listItems.map((listItem)=>(
               
               <div className={`list-item ${curListItem.original_id===listItem.original_id?'active-list-item' : 'inactive-list-item'}`} 
-              key={listItem.id} onClick={()=>getTasksofList(listItem)}>
+              key={listItem.id} onClick={()=>getTasksofList(listItem)} draggable>
                
                 <div style={{display : 'flex', alignItems : 'center', gap : '5px', flex:1}}>
                   <IoMdListBox id='list-icon' />
@@ -332,7 +353,7 @@ const Content = () => {
       {
         !showSideBar?
           <div className="closed-left-box">
-          <RiMenuUnfoldFill id='ham-icon' onClick={()=>{setShowSideBar(!showSideBar)}} />
+          <HiMenu id='ham-icon' onClick={()=>{setShowSideBar(!showSideBar)}} />
           </div>:null
       }
       
@@ -348,8 +369,6 @@ const Content = () => {
           }}>
             <p>+</p>
       
-      
-      
         </div>
 
         <div className="title" style={{
@@ -361,52 +380,71 @@ const Content = () => {
         
       {
         items.length>0?
-        
-          <div className="container">
-            {
-              items.map((item) => (
-                <div className={`task ${item.checked?'complete-task' : 'incomplete-task'}`} key={item.id}>
+          <DragDropContext onDragEnd={(result)=> handleDragEnd(result)}>
+            <Droppable droppableId="tasks" direction='vertical'>
+              {
+                (provided)=>(
+                  <div className="container" {...provided.droppableProps} ref={provided.innerRef}>
+                    { items.map((item, index) => (
+                        <Draggable key={item.id} draggableId={item.id.toString()} index={index}>
 
-                  <p className='num'>{item.id}</p>
-                  <p className='task-name'
-                    style={
-                      {textDecoration: item.checked ? 'line-through' : 'none'}
-                    }
-                    onClick={!item.checked? ()=> handleTask(item, true) : null} 
-                  >{item.task}</p>
-                  <div className="opts-box"
-                    style={
-                      item.checked?{
-                        color : 'black'
-                      } : null
-                    }
-                  >
-                    {item.checked? <IoIosRefresh id='restore' style={{fontSize : '1.3rem'}} onClick={()=>handleTask(item, false)}/> 
-                    :<FiEdit3 id='edit' 
-                      onClick={()=>{
-                        setShowPopup(true);
-                        setAddTaskPopup(true);
-                        setTaskPopupAction('edit');
-                        setNewTask(item.task);
-                        setTaskToBeEdited(item.original_id)
-                      }
-                      }/>}
+                          {
+                            (provided)=>(
+                              <div 
+                                className={`task ${item.checked?'complete-task' : 'incomplete-task'}`} 
+                                {...provided.draggableProps} 
+                                {...provided.dragHandleProps} 
+                                ref={provided.innerRef}
+                              >
+                                <p className='num'>{item.id}</p>
+                                <p className='task-name'
+                                  style={
+                                    {textDecoration: item.checked ? 'line-through' : 'none'}
+                                  }
+                                  onClick={!item.checked? ()=> handleTask(item, true) : null} 
+                                >{item.task}</p>
 
-                    <FaTrash id='delete' 
-                      onClick={()=>{
-                        setShowPopup(true);
-                        setDeletePopup({
-                          id : item.original_id, 
-                          type : 'task'
-                        })
-                      }}/> 
+                                <div className="opts-box"
+                                  style={
+                                    item.checked?{
+                                      color : 'black'
+                                    } : null
+                                  }
+                                >
+                                  {item.checked? <IoIosRefresh id='restore' style={{fontSize : '1.3rem'}} onClick={()=>handleTask(item, false)}/> 
+                                  :<FiEdit3 id='edit' 
+                                    onClick={()=>{
+                                      setShowPopup(true);
+                                      setAddTaskPopup(true);
+                                      setTaskPopupAction('edit');
+                                      setNewTask(item.task);
+                                      setTaskToBeEdited(item.original_id)
+                                    }
+                                    }/>}
+
+                                  <FaTrash id='delete' 
+                                    onClick={()=>{
+                                      setShowPopup(true);
+                                      setDeletePopup({
+                                        id : item.original_id, 
+                                        type : 'task'
+                                      })
+                                    }}/> 
+                                </div>
+
+                              </div>
+                            )
+                          }
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
                   </div>
-
-                </div>
-              ))
-            }
-
-          </div>
+                )
+              }
+              
+            </Droppable>
+          </DragDropContext>
+          
         : 
         <div className="no-data">
           <img src={noDataImg} alt="Vanakkam" />

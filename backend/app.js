@@ -248,6 +248,54 @@ app.put('/handleTask', async (req, res) => {
     }
 })
 
+app.put('/reorderTasks', async (req, res) => {
+    try{
+        let list_id = req.body.list_id
+        let tasks = req.body.tasks
+
+        let taskList = await TaskList.findById(list_id)
+        
+        let newTasks = tasks.map((task)=>{
+            return {
+                _id: task.original_id,
+                task: task.task,
+                checked: task.checked
+            }
+        })
+
+        taskList.tasks = newTasks
+        await taskList.save().then(
+            ()=> {
+                res.status(200).send(
+                    {
+                        success: true,
+                        message: 'Tasks Reordered Successfully!!'
+                    }
+                )
+            }
+        ).catch(
+            (err)=> {
+                console.log(err)
+                res.status(500).send(
+                    {
+                        success: false,
+                        message: 'Some Technical Error!!'
+                    }
+                )
+            }
+        )
+    }
+    catch(err){
+        res.status(500).send(
+            {
+                success: false,
+                message: 'Some Technical Error'
+            }
+        )
+    }
+
+})
+
 // Delete Task
 app.delete('/deleteTask/:list_id/:task_id', async (req, res) => {
     try{
@@ -312,8 +360,6 @@ app.get('/getLists', async (req, res) => {
         let data = []
         let a = 1;
         all_lists = await TaskList.find({})
-
-        console.log(all_lists)
         
         all_lists.forEach((list)=>{
             data.push({
@@ -323,7 +369,6 @@ app.get('/getLists', async (req, res) => {
             })
         })
 
-        // console.log(data)
         res.status(200).send(
             {
                 success: true,

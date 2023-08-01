@@ -15,7 +15,7 @@ const Header = () => {
 
     return (
         <header>
-            <h1>To do List</h1>
+            <h1>Taskify 2.0</h1>
         </header>
     )
 }

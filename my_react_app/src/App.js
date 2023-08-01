@@ -1,4 +1,5 @@
 import './App.scss';
+import Auth from './components/Auth';
 import Content from './components/Content';
 import Footer from './components/Footer';
 import Header from './components/Header';
@@ -10,8 +11,9 @@ function App() {
     <div className='App'>
       
       <Header/>
-      
-      <Content/>
+          
+      <Auth/>
+      {/* <Content/> */}
 
       <Footer/>
 

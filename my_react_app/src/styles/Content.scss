@@ -304,9 +304,11 @@
         align-items: flex-start;
         height: 100%;
         padding-top: 15px;
+        background-color: #35363a;
+        border-radius: 10px 0px 0px 10px;
 
         #ham-icon{
-            font-size: 1.3rem;
+            font-size: 1.55rem;
             cursor: pointer;
             transition: .15s ease;
             background-color: #35363a;
@@ -326,7 +328,7 @@
         border-radius: 10px;
         padding: 10px;
         white-space: nowrap;
-        transition: .3s ease;
+        transition: .15s ease;
         overflow: hidden;
         
 
