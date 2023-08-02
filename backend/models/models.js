@@ -6,7 +6,6 @@ const taskSchema = new mongoose.Schema({
 })
 
 const taskListSchema = new mongoose.Schema({   
-    
     name : { type: String, required: true },
     tasks : [taskSchema]
 })
@@ -20,6 +19,4 @@ const TaskList = mongoose.model('TaskList', taskListSchema)
 const Task = mongoose.model('Task', taskSchema)
 const User = mongoose.model('User', userSchema)
 
-module.exports = {Task}
-module.exports = {TaskList}
-module.exports = {User}
+module.exports = {Task, TaskList, User}

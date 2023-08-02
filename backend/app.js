@@ -6,8 +6,9 @@ const mongoose = require("mongoose");
 // const {Task, } = require('./models/taskModel')
 // const {TaskList} = require('./models/taskListModel')
 
-const Task = require('./models/models').Task
-const TaskList = require('./models/models').TaskList
+// const Task = require('./models/models').Task
+// const TaskList = require('./models/models').TaskList
+const { Task, TaskList, User } = require('./models/models');
 
 const bodyParser = require('body-parser')
 
@@ -359,6 +360,7 @@ app.get('/getLists', async (req, res) => {
         let all_lists = [ ]
         let data = []
         let a = 1;
+
         all_lists = await TaskList.find({})
         
         all_lists.forEach((list)=>{
