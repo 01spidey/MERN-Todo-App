@@ -38,7 +38,6 @@ app.get('/', (req, res) => {
     res.send('Hello World!')
 })
 
-// Get All Tasks
 app.get('/getTasks/:id', async (req, res) => {
     try{
         let list_id = req.params.id;
@@ -353,15 +352,15 @@ app.delete('/deleteTask/:list_id/:task_id', async (req, res) => {
 
 // ---------------------------------------------------------------
 
-// Get All Lists
-app.get('/getLists', async (req, res) => {
+// Get All Lists - Changed
+app.get('/getLists/:username', async (req, res) => {
     try{
-        // let all_lists = await List.find({})
         let all_lists = [ ]
         let data = []
         let a = 1;
+        let username = req.params.username
 
-        all_lists = await TaskList.find({})
+        all_lists = await TaskList.find({username: username})
         
         all_lists.forEach((list)=>{
             data.push({
@@ -391,11 +390,13 @@ app.get('/getLists', async (req, res) => {
 
 })
 
-// Add New List
+// Add New List - Changed
 app.post('/addList', async(req, res)=>{
     try{
         console.log(req.body)
-        TaskList.findOne({name : req.body.name}).then(
+        username = req.body.username
+
+        await TaskList.findOne({name : req.body.name, username : username}).then(
             async (result)=>{
                 if(result===null){
                     
@@ -444,15 +445,14 @@ app.post('/addList', async(req, res)=>{
 
 })
 
-// Edit Existing List
+// Edit Existing List - Changed
 app.put('/updateList', async (req, res) => {
     try{
         // console.log(req.body)
         let list_id = req.body.list_id
         let newListName = req.body.name
 
-        
-        TaskList.findByIdAndUpdate(
+        await TaskList.findByIdAndUpdate(
             list_id,
             {name: newListName},
             {new: true}
@@ -489,7 +489,7 @@ app.put('/updateList', async (req, res) => {
 
 })
 
-// Delete List
+// Delete List - Changed
 app.delete('/deleteList/:id', async (req, res) => {
     try{
         let list_id = req.params.id
@@ -522,3 +522,84 @@ app.delete('/deleteList/:id', async (req, res) => {
     }
 })
 
+// ----------------------------------------------------------
+app.post('/login', async(req,res)=>{
+    try{
+        let username = req.body.username
+        let password = req.body.password
+        console.log(req.body)
+
+        await User.find({username: username}).then(
+            (result)=>{
+                if(result.length===0){
+                    res.send(
+                        {success: false, message: 'User Not Found!!'}
+                    )
+                }else{
+                    let user = result[0]
+                    if(user.password!==password){
+                        res.send(
+                            {success: false, message: 'Incorrect Password!!'}
+                        )
+                    }else{
+                        res.send(
+                            {success: true, message: 'Login Successful!!'}
+                        )
+                    }
+                }
+            }
+        ).catch(
+            (err)=>{
+                console.log(err)
+                res.status(500).send(
+                    {success: false, message: 'Invalid Credentials!!'}
+                )
+            }
+        )
+
+        
+    }
+    catch(err){
+        res.status(500).send(
+            {success: false, message: 'Invalid Credentials!!'}
+        )
+    }
+})
+
+app.post('/register', async(req,res)=>{
+    try{
+        let username = req.body.username
+        let password = req.body.password
+
+        await User.find({username:username}).then(
+            async (result)=>{
+                if(result.length>0){
+                    res.send(
+                        {success: false, message: 'User Already Exists!!'}
+                    )
+                }else{
+                    let user = new User(req.body)
+                    await user.save().then(
+                        ()=>{
+                            res.send(
+                                {success: true, message: 'Registration Successful!!'}
+                            )
+                        }
+                    ).catch(
+                        err=>{
+                            console.log(err)
+                            res.status(500).send(
+                                {success: false, message: 'Registration Failed!!'}
+                            )
+                        }
+                    )
+                }
+            }
+        )
+    }
+    catch(err){
+        res.status(500).send(
+            {success: false, message: 'Registration Failed!!'}
+        )
+    }
+})

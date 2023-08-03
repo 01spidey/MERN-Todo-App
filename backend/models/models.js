@@ -5,7 +5,8 @@ const taskSchema = new mongoose.Schema({
     checked: { type: Boolean, required: true , default: false}
 })
 
-const taskListSchema = new mongoose.Schema({   
+const taskListSchema = new mongoose.Schema({
+    username: { type: String, required: true },   
     name : { type: String, required: true },
     tasks : [taskSchema]
 })

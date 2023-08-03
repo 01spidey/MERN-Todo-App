@@ -34,6 +34,8 @@ const Content = () => {
 
     
     const API_URL = 'http://localhost:4000'
+    const username = '01kumaran'
+
 
     useEffect(() => {
       getLists(null)
@@ -42,8 +44,7 @@ const Content = () => {
 
     const getLists = (flag) => {
       try{
-
-        axios.get(`${API_URL}/getLists`).then(
+        axios.get(`${API_URL}/getLists/${username}`).then(
             (res)=> {
               setListItems(res.data.lists)
 
@@ -188,6 +189,7 @@ const Content = () => {
     const addOrUpdateList = (action, list_id)=>{
 
       let list_obj = {
+        username : username,
         name : newList.trim(),
         tasks : []
       }
