@@ -145,7 +145,7 @@ app.put('/updateTask', async (req, res) => {
                         res.status(200).send(
                             {
                                 success: true,
-                                message: 'Task Edited Successfully!!'
+                                message: 'Task Updated Successfully!!'
                             }
                         )
                     }
@@ -156,7 +156,7 @@ app.put('/updateTask', async (req, res) => {
                         res.status(500).send(
                             {
                                 success: false,
-                                message: 'Task Edit Failed!!'
+                                message: 'Task Update Failed!!'
                             }
                         )
                     }
@@ -408,7 +408,7 @@ app.post('/addList', async(req, res)=>{
                     res.status(200).send(
                         {
                             success: true,
-                            message: 'List Added Successfully!!'
+                            message: 'New List Created !!'
                         }
                     )
                 }else{
@@ -462,7 +462,7 @@ app.put('/updateList', async (req, res) => {
                 res.status(200).send(
                     {
                         success: true,
-                        message: 'List Edited Successfully!!'  
+                        message: 'List Updated Successfully!!'  
                     }
                 )
             }
@@ -482,7 +482,7 @@ app.put('/updateList', async (req, res) => {
         res.status(500).send(
             {
                 success: false,
-                message: 'List Edit Failed!!'
+                message: 'List Update Failed!!'
             }
         )
     }
@@ -543,7 +543,7 @@ app.post('/login', async(req,res)=>{
                         )
                     }else{
                         res.send(
-                            {success: true, message: 'Login Successful!!'}
+                            {success: true, message: `Welcome ${user.username} !!`}
                         )
                     }
                 }

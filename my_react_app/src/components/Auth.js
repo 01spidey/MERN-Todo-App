@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import '../styles/Auth.scss'
 import tasks from '../assets/tasks.svg'
+import axios from 'axios'
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true)
   const [showPassword, setShowPassword] = useState(false)
   const usernameRegex = new RegExp(/^[a-zA-Z0-9_]{4,20}$/)
-  const passwordRegex = new RegExp(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[#$@!%&*?])[A-Za-z\d#$@!%&*?]{8,20}$/)
+  const passwordRegex = new RegExp(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[#$@!%&*?])[A-Za-z\d#$@!%&*?]{5,10}$/)
   const [isFocused, setIsFocused] = useState('');
 
   const [formData, setFormData] = useState({
@@ -22,6 +25,29 @@ const Auth = () => {
   })
 
   const [isValid, setisValid] = useState(false)
+
+  const API_URL = 'http://localhost:4000'
+
+  const toastify = (status, message) => {
+    
+    let toast_class = {
+      className : `toast`,
+      position: toast.POSITION.TOP_RIGHT,
+      autoClose: 3000,
+      closeOnClick: true,
+      theme: 'dark',
+      // transition: toast.TRANSITION.SLIDE
+    }
+
+    if (status === 'success') {
+      toast.success(message, toast_class);
+    }
+    else{
+      console.log(status, message)
+      toast.error(message, toast_class);
+    }
+    
+  };
 
   const isValidForm = ()=>{
     let [username, pass, repass] = [formData.username,formData.password,formData.confirmPassword]
@@ -43,12 +69,16 @@ const Auth = () => {
   }
 
   useEffect(() => {
+    sessionStorage.setItem('username', '01tom')
+  }, [])
+
+  useEffect(() => {
     isValidForm();
   }, [formData, errorData]);
 
-  const changePage = () => {
-    setIsLogin(!isLogin);
-    
+  useEffect(() => {
+    console.log(isLogin)
+
     setFormData({
       username:'',
       password:'',
@@ -76,13 +106,12 @@ const Auth = () => {
       signupPassword.value = ''
       signupConfirmPassword.value = ''
     }
-  
-    
-  };
+
+  }, [isLogin])
+
   
   const handleFormChange = (event, type)=>{
     let value = event.target.value
-    
     switch(type){
       case 'username':
         if(usernameRegex.test(value)){ 
@@ -93,20 +122,32 @@ const Auth = () => {
         break
 
       case 'password':
+        // console.log(value, formData.confirmPassword)
         if(passwordRegex.test(value)){ 
+          console.log(value)
           setFormData( {...formData,password:value} )
           setErrorData( {...errorData,password:''} )
+
+          if(!isLogin){
+            if(value!==formData.confirmPassword) setErrorData({...errorData,password : '', confirmPassword:'Password doesn\'t match!!'})
+            else setErrorData({...errorData,confirmPassword:''})
+          }
+
         }
-        else setErrorData({...errorData,password:'Password not Valid!!'});
+        else{ 
+          if(!isLogin){
+            if(value!==formData.confirmPassword) setErrorData({...errorData,password:'Password not Valid!!', confirmPassword:'Password doesn\'t match!!'})
+            else setErrorData({...errorData,confirmPassword:''})
+          }
+        }
+
         break
 
       case 'confirmPassword':
         if(!isLogin){
-          // console.log(value, formData.password)
           if(value===formData.password){
             setFormData( {...formData,confirmPassword:value} )
             setErrorData( {...errorData,confirmPassword:''} )
-
           }
           else setErrorData({...errorData,confirmPassword:'Password doesn\'t match!!'})
         }
@@ -117,16 +158,46 @@ const Auth = () => {
     }
   }
 
-  const proceedLogin = ()=>{
+  const handleLoginAndSignup = (action)=>{
     console.log(formData.username, formData.password)
-  }
+    let postData = {
+      username : formData.username,
+      password : formData.password
+    }
 
-  const proceedSignup = ()=>{
-    console.log(formData.username, formData.password, formData.confirmPassword)
+    axios.post(`${API_URL}/${action}`, postData).then(
+      (res)=>{
+        if(res.data.success){
+          console.log(res.data)
+          if(action==='register'){
+            toastify('success', res.data.message)
+            setIsLogin(true)
+          }
+          else{
+            sessionStorage.setItem('username', formData.username)
+            window.location.href = '/todo'
+
+            
+          }
+        }
+        else{
+          toastify('error', res.data.message)
+        }
+      }
+    ).catch(
+      (err)=>{
+        console.error(err)
+        toastify('error', 'Something went wrong!!')
+      }
+    )
+
   }
 
   return (
     <div className="hero-box">
+        
+        <ToastContainer />
+
         <div className="left">
             <img src={tasks} alt="hero-img" />
         </div>
@@ -185,12 +256,13 @@ const Auth = () => {
                 </div>
                 <div className="btm-box">
                   <button className="btn" 
-                    onClick={proceedLogin}
+                    onClick={()=>{handleLoginAndSignup('login')}}
                     style={{
                       backgroundColor: isValid ? '#7c5cfc' : '#ccc',
+                      pointerEvents: isValid ? 'auto' : 'none'
                     }}
                   >Login</button>
-                  <p className="text">Don't have an account? <span onClick={changePage}>Sign Up</span></p>
+                  <p className="text">Don't have an account? <span onClick={()=>setIsLogin(!isLogin)}>Sign Up</span></p>
                 </div>
               </div>
             :
@@ -267,12 +339,13 @@ const Auth = () => {
                 </div>
                 <div className="btm-box">
                   <button className="btn"
-                    onClick={proceedSignup}
+                    onClick={()=>{handleLoginAndSignup('register')}}
                     style={{
                       backgroundColor: isValid ? '#7c5cfc' : '#ccc',
+                      pointerEvents: isValid ? 'auto' : 'none'
                     }}
                   >Sign Up</button>
-                  <p className="text">Already have an account? <span onClick={changePage}>login</span></p>
+                  <p className="text">Already have an account? <span onClick={()=>setIsLogin(!isLogin)}>login</span></p>
                 </div>
               </div>
             

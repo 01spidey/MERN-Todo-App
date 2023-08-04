@@ -9,6 +9,9 @@ import { IoMdListBox } from 'react-icons/io';
 import { HiMenu } from 'react-icons/hi';
 import {InfinitySpin } from  'react-loader-spinner'
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 const Content = () => {
 
@@ -38,22 +41,47 @@ const Content = () => {
 
 
     useEffect(() => {
+      toastify('success', 'Welcome to Todo App')
       getLists(null)
     }, [])
 
+    const toastify = (status, message) => {
+    
+      let toast_class = {
+        className : `toast`,
+        position: toast.POSITION.TOP_RIGHT,
+        autoClose: 3000,
+        closeOnClick: true,
+        theme: 'dark',
+        // transition: toast.TRANSITION.SLIDE
+      }
+  
+      if (status === 'success') {
+        toast.success(message, toast_class);
+      }
+      else if(status === 'warning'){
+        toast.warn(message, toast_class);
+      }
+      else{
+        toast.error(message, toast_class);
+      }
+      
+    };
 
     const getLists = (flag) => {
       try{
         axios.get(`${API_URL}/getLists/${username}`).then(
             (res)=> {
               setListItems(res.data.lists)
-
               if(flag===null){
                 setCurListItem(res.data.lists[0])
                 getTasksofList(res.data.lists[0])
               }
               else{
-                if(flag===true){
+
+                if(flag){
+                  console.log('Get Lists Called')
+
                   let updated_list_item = {
                     ...curListItem,
                     name : newList.trim() 
@@ -92,18 +120,24 @@ const Content = () => {
 
     }
 
-    // Delete Task
+    // Delete Task - Toasted
     const deleteTask = ()=>{
       axios.delete(`${API_URL}/deleteTask/${curListItem.original_id}/${deletePopup.id}`)
       .then(
         (res)=> {
           if(res.data.success){
-            console.log(res.data); 
+            toastify('error', res.data.message)
             getTasksofList(curListItem)
-          }else console.log(res.data.message)
+          }else{
+            toastify('error', res.data.message)
+            console.log(res.data.message)
+          }
         }
       ).catch(
-        (err)=> console.log(err)
+        (err)=>{
+          toastify('error', 'Server Not Responding')
+          console.log(err)
+        }
       )
 
       setShowPopup(false)
@@ -111,19 +145,24 @@ const Content = () => {
       
     }
 
-    // Delete List
+    // Delete List - Toasted
     const deleteList = ()=>{
       axios.delete(`${API_URL}/deleteList/${deletePopup.id}`)
       .then(
         (res)=> {
           if(res.data.success){
-            console.log(res.data); 
-            // getTasksofList(false)
+            toastify('error', res.data.message)
             getLists(false)
-          }else console.log(res.data.message)
+          }else{
+            console.log(res.data.message)
+            toastify('error', res.data.message)
+          }
         }
       ).catch(
-        (err)=> console.log(err)
+        (err)=>{
+          toastify('error', 'Server Not Responding')
+          console.log(err)
+        }
       )
 
       setShowPopup(false)
@@ -140,7 +179,7 @@ const Content = () => {
       setNewList(event.target.value)
     }
 
-    // Add New Task or Edit Existing Task
+    // Add New Task or Edit Existing Task - Toasted
     const addOrUpdateTask = (action, task_id)=>{
 
       let postData = {
@@ -161,24 +200,31 @@ const Content = () => {
 
       if(action==='add'){
         axios.post(`${API_URL}/addTask`, postData).then(
-          (res)=> {console.log(res); getTasksofList(curListItem)}
+          (res)=> {toastify('success', res.data.message) ; getTasksofList(curListItem)}
         ).catch(
-          (err)=> console.log(err)
+          (err)=>{
+            console.log(err)
+          }
         )
 
       }else{
-        // id = task_id
         axios.put(`${API_URL}/updateTask`, putData)
         .then(
           (res)=> {
             if(res.data.success){
-              console.log(res); 
+              toastify('success', res.data.message)
               getTasksofList(curListItem)
-            }else console.log(res.data.message)
+            }else{
+              toastify('error', res.data.message)
+              console.log(res.data.message)
+            }
             
           }
         ).catch(
-          (err)=> console.log(err)
+          (err)=>{ 
+            toastify('error', 'Server Not Responding!!')
+            console.log(err)
+          }
         )
       }
      
@@ -186,6 +232,7 @@ const Content = () => {
      setShowPopup(false)
     }
 
+    // Add New List or Edit Existing List - Toasted
     const addOrUpdateList = (action, list_id)=>{
 
       let list_obj = {
@@ -202,31 +249,40 @@ const Content = () => {
               setAddListPopup(false)
               setShowPopup(false)
               getLists(false)
+              toastify('success', res.data.message)
+            }else{
+              toastify('warning', res.data.message)
             }
             
           }
         ).catch(
-          (err)=> console.log(err)
+          (err)=>{
+            toastify('error', 'Server Not Responding!!')
+            console.log(err)
+          }
         )
-
       }
       
       else{
-        // id = task_id
         axios.put(`${API_URL}/updateList`, {list_id : list_id, name : newList.trim()})
         .then(
           (res)=> {
             if(res.data.success){
-              console.log(res); 
               getLists(true)
-              
               setAddListPopup(false)
               setShowPopup(false)
-            }else console.log(res.data.message)
+              toastify('success', res.data.message)
+            }else{ 
+              toastify('error', res.data.message)
+              console.log(res.data.message)
+            }
             
           }
         ).catch(
-          (err)=> console.log(err)
+          (err)=> {
+            toastify('error', 'Server Not Responding!!')
+            console.log(err)
+          }
         )
       }
     }
@@ -279,6 +335,8 @@ const Content = () => {
   return ( 
 
     <div className="main-box">
+      
+      <ToastContainer />
 
       <div className="left-box" style={
         showSideBar?{

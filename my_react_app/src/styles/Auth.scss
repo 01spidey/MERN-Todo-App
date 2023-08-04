@@ -9,6 +9,12 @@
     height: 70%;
     width: 70%;
 
+    .toast{
+        font-family: 'Nunito';
+        font-size: .85rem;
+        font-weight: 500;
+    }
+
     .left{
         flex: 1;
         display: flex;
