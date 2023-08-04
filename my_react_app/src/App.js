@@ -16,8 +16,8 @@ function App() {
       
       <Routes>
         <Route path="/" element={<Auth />}/>
-        <Route path="/login" element={<Auth />}/>
         <Route path="/todo" element={<Content />}/>
+        <Route path='*' element={<Auth/>}/>
       </Routes>
 
       <Footer/>

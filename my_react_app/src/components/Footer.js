@@ -8,7 +8,8 @@ const Footer = () => {
     return (
         <div>
             <footer>
-                Copyright &copy; {year}
+                {/* Copyright &copy; {year} */}
+                Built with <span role="img" aria-label="love">❤️</span> by Scamander<span role='img' aria-label='wizard'>🪄</span>
             </footer>
         </div>
     )

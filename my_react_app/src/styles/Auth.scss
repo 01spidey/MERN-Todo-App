@@ -29,7 +29,7 @@
 
     .right{
         flex : 1;
-        // background-color: lightgreen;
+        background-color: #ececec;
         padding: 10px;
         display: flex;
         flex-direction: column;
@@ -88,6 +88,7 @@
                         padding: 10px;
                         border-radius: 10px;
                         border: 1px solid #ccc;
+                        background-color: white;
                         width: 250px;
                         box-shadow: 1px 2px 7px 3px rgba(0,0,0,0.4);
                         display: flex;

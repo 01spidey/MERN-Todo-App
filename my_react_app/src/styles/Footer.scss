@@ -1,4 +1,11 @@
 footer{
-    font-family: 'Nunito';
+    font-family: 'Monospace';
+    font-size: .85rem;
     font-weight: bold;
+    #name{
+        background-color: #35363a;
+        padding: 2px 5px;
+        color: white;
+        border-radius: 3px;
+    }
 }
