@@ -6,11 +6,13 @@ import {IoIosRefresh} from "react-icons/io";
 import noDataImg from '../assets/no-data.svg'
 import axios from 'axios';
 import { IoMdListBox } from 'react-icons/io';
+import {IoLogOut} from 'react-icons/io5'
 import { HiMenu } from 'react-icons/hi';
 import {InfinitySpin } from  'react-loader-spinner'
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useNavigate } from 'react-router-dom';
 
 
 const Content = () => {
@@ -37,12 +39,26 @@ const Content = () => {
 
     
     const API_URL = 'http://localhost:4000'
-    const username = '01kumaran'
+    const [username, setUsername] = useState(sessionStorage.getItem('username'))
+    const navigate = useNavigate()
 
+    useEffect(() => {      
 
-    useEffect(() => {
-      toastify('success', 'Welcome to Todo App')
-      getLists(null)
+      if(username){
+        if(username==='null' || null){
+          // console.log('No User Found')
+          navigate('/')
+        }else{
+          setUsername(username)
+          getLists(1)
+          toastify('success', `Welcome ${username}`)
+        }
+      }else{
+        navigate('/')
+      }
+       
+      
+      
     }, [])
 
     const toastify = (status, message) => {
@@ -53,7 +69,6 @@ const Content = () => {
         autoClose: 3000,
         closeOnClick: true,
         theme: 'dark',
-        // transition: toast.TRANSITION.SLIDE
       }
   
       if (status === 'success') {
@@ -68,32 +83,16 @@ const Content = () => {
       
     };
 
-    const getLists = (flag) => {
+    const getLists = (lst_id) => {
       try{
+        // console.log(username)
         axios.get(`${API_URL}/getLists/${username}`).then(
             (res)=> {
-              setListItems(res.data.lists)
-              if(flag===null){
-                setCurListItem(res.data.lists[0])
-                getTasksofList(res.data.lists[0])
-              }
-              else{
-
-                if(flag){
-                  console.log('Get Lists Called')
-
-                  let updated_list_item = {
-                    ...curListItem,
-                    name : newList.trim() 
-                  }
-                  console.log(updated_list_item)
-                  setCurListItem(updated_list_item)
-                  getTasksofList(updated_list_item)
-                }else{
-                  setCurListItem(res.data.lists[(res.data.lists.length)-1])
-                  getTasksofList(res.data.lists[(res.data.lists.length)-1])
-                }
-              } 
+              let cur_lst = res.data.lists
+              setListItems(cur_lst)
+              let index = Math.max(0, lst_id-1)
+              getTasksofList(res.data.lists[index])
+              
             }
         ).catch(
           err=> console.log(err)
@@ -109,9 +108,9 @@ const Content = () => {
       axios.put(`${API_URL}/handleTask`, {id :(target_task.id-1), list_id : curListItem.original_id, action : action}).then(
         (res)=>{
           if(res.data.success){
-            console.log(res.data); 
+            // console.log(res.data); 
             getTasksofList(curListItem)
-          }else console.log(res.data.message)
+          }else toastify('error', res.data.message)
         }
       )
       .catch(
@@ -122,7 +121,7 @@ const Content = () => {
 
     // Delete Task - Toasted
     const deleteTask = ()=>{
-      axios.delete(`${API_URL}/deleteTask/${curListItem.original_id}/${deletePopup.id}`)
+      axios.delete(`${API_URL}/deleteTask/${curListItem.original_id}/${deletePopup.item.original_id}`)
       .then(
         (res)=> {
           if(res.data.success){
@@ -130,7 +129,6 @@ const Content = () => {
             getTasksofList(curListItem)
           }else{
             toastify('error', res.data.message)
-            console.log(res.data.message)
           }
         }
       ).catch(
@@ -141,20 +139,21 @@ const Content = () => {
       )
 
       setShowPopup(false)
-      setDeletePopup(null)
+      // setDeletePopup(null)
       
     }
 
     // Delete List - Toasted
     const deleteList = ()=>{
-      axios.delete(`${API_URL}/deleteList/${deletePopup.id}`)
+      let cur_id = deletePopup.item.id
+
+      axios.delete(`${API_URL}/deleteList/${deletePopup.item.original_id}`)
       .then(
         (res)=> {
           if(res.data.success){
             toastify('error', res.data.message)
-            getLists(false)
+            getLists(deletePopup.item.id-1)
           }else{
-            console.log(res.data.message)
             toastify('error', res.data.message)
           }
         }
@@ -166,8 +165,7 @@ const Content = () => {
       )
 
       setShowPopup(false)
-      setDeletePopup(null)
-      
+      // setDeletePopup(null)
     }
 
     // Create New Task
@@ -203,6 +201,7 @@ const Content = () => {
           (res)=> {toastify('success', res.data.message) ; getTasksofList(curListItem)}
         ).catch(
           (err)=>{
+            toastify('error', 'Server Not Responding!!')
             console.log(err)
           }
         )
@@ -216,7 +215,6 @@ const Content = () => {
               getTasksofList(curListItem)
             }else{
               toastify('error', res.data.message)
-              console.log(res.data.message)
             }
             
           }
@@ -244,11 +242,10 @@ const Content = () => {
       if(action==='add'){
         axios.post(`${API_URL}/addList`, list_obj).then(
           (res)=> {
-            console.log(res);
             if(res.data.success){
               setAddListPopup(false)
               setShowPopup(false)
-              getLists(false)
+              getLists(listItems.length+1)
               toastify('success', res.data.message)
             }else{
               toastify('warning', res.data.message)
@@ -268,13 +265,12 @@ const Content = () => {
         .then(
           (res)=> {
             if(res.data.success){
-              getLists(true)
+              getLists(curListItem.id)
               setAddListPopup(false)
               setShowPopup(false)
               toastify('success', res.data.message)
             }else{ 
               toastify('error', res.data.message)
-              console.log(res.data.message)
             }
             
           }
@@ -290,15 +286,12 @@ const Content = () => {
     const getTasksofList = (listItem)=>{
       setCurListItem(listItem)
       
-      console.log(listItem)
-
       axios.get(`${API_URL}/getTasks/${listItem.original_id}`).then(
         (res)=>{ 
-          console.log(res.data)
           setItems(res.data.tasks);
         }
       ).catch(
-        err=> console.log('Some Technical Error!!')
+        err=> toastify('error', 'Server Not Responding!!')
       )
     }
 
@@ -330,6 +323,11 @@ const Content = () => {
         (err)=> console.log(err)
       )
 
+    }
+
+    const logout = ()=>{
+      sessionStorage.removeItem('username')
+      navigate('/')
     }
 
   return ( 
@@ -397,7 +395,7 @@ const Content = () => {
                     onClick={()=>{
                       setShowPopup(true);
                       setDeletePopup({
-                        id : listItem.original_id, 
+                        item : listItem, 
                         type : 'list'
                       }
                       ); 
@@ -406,6 +404,25 @@ const Content = () => {
               </div>
             ))
           }
+
+        </div>
+
+        <div className="list-box"
+          style={
+            {
+              position : 'absolute',
+              bottom : '10px',
+              left : '10px',
+              right : '10px'
+            }
+          }
+        >
+          <div className="list-item last-item" onClick={logout}>
+              <div style={{display : 'flex', alignItems : 'center', gap : '5px', flex:1}}>
+              <IoLogOut id='list-icon' />
+              <p className="list-name">Logout</p>
+            </div>
+          </div>
         </div>
 
       </div>
@@ -486,7 +503,7 @@ const Content = () => {
                                     onClick={()=>{
                                       setShowPopup(true);
                                       setDeletePopup({
-                                        id : item.original_id, 
+                                        item : item, 
                                         type : 'task'
                                       })
                                     }}/> 

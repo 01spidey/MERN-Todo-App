@@ -1,28 +1,40 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useReducer} from 'react'
 import '../styles/Auth.scss'
 import tasks from '../assets/tasks.svg'
 import axios from 'axios'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useNavigate } from 'react-router-dom';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true)
   const [showPassword, setShowPassword] = useState(false)
   const usernameRegex = new RegExp(/^[a-zA-Z0-9_]{4,20}$/)
-  const passwordRegex = new RegExp(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[#$@!%&*?])[A-Za-z\d#$@!%&*?]{5,10}$/)
+  const passwordRegex = new RegExp(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[#$@!%&*?])[A-Za-z\d#$@!%&*?]{5,20}$/)
   const [isFocused, setIsFocused] = useState('');
 
-  const [formData, setFormData] = useState({
-    username:'',
-    password:'',
-    confirmPassword:''
-  })
+  const [formData, setFormData] = useReducer(
+    (state, newState) => ({...state, ...newState}),
+    {
+      username:'',
+      password:'',
+      confirmPassword:'',
+    }
+  )
+  
+  // useState({
+  //   username:'',
+  //   password:'',
+  //   confirmPassword:''
+  // })
 
   const [errorData, setErrorData] = useState({
     username:'',
     password:'',
     confirmPassword:'', 
   })
+
+  const navigate = useNavigate()
 
   const [isValid, setisValid] = useState(false)
 
@@ -43,7 +55,6 @@ const Auth = () => {
       toast.success(message, toast_class);
     }
     else{
-      console.log(status, message)
       toast.error(message, toast_class);
     }
     
@@ -52,7 +63,6 @@ const Auth = () => {
   const isValidForm = ()=>{
     let [username, pass, repass] = [formData.username,formData.password,formData.confirmPassword]
     let [usernameError, passError, repassError] = [errorData.username,errorData.password,errorData.confirmPassword]
-
     
     if(username.length>0 && pass.length>0 && usernameError.length===0 && passError.length===0){
       if(!isLogin){
@@ -61,7 +71,6 @@ const Auth = () => {
         }else setisValid(false)
       }else{ 
         setisValid(true)
-        console.log(username, pass, repass)
       }
     }else setisValid(false)
 
@@ -69,7 +78,10 @@ const Auth = () => {
   }
 
   useEffect(() => {
-    sessionStorage.setItem('username', '01tom')
+    let username = sessionStorage.getItem('username')
+    if(username){
+      navigate('/todo')
+    }
   }, [])
 
   useEffect(() => {
@@ -77,7 +89,6 @@ const Auth = () => {
   }, [formData, errorData]);
 
   useEffect(() => {
-    console.log(isLogin)
 
     setFormData({
       username:'',
@@ -122,10 +133,8 @@ const Auth = () => {
         break
 
       case 'password':
-        // console.log(value, formData.confirmPassword)
-        if(passwordRegex.test(value)){ 
-          console.log(value)
-          setFormData( {...formData,password:value} )
+        if(passwordRegex.test(value)){
+          setFormData( {...formData,password:value})
           setErrorData( {...errorData,password:''} )
 
           if(!isLogin){
@@ -139,6 +148,7 @@ const Auth = () => {
             if(value!==formData.confirmPassword) setErrorData({...errorData,password:'Password not Valid!!', confirmPassword:'Password doesn\'t match!!'})
             else setErrorData({...errorData,confirmPassword:''})
           }
+          else setErrorData({...errorData,password:'Password not Valid!!'});
         }
 
         break
@@ -159,7 +169,6 @@ const Auth = () => {
   }
 
   const handleLoginAndSignup = (action)=>{
-    console.log(formData.username, formData.password)
     let postData = {
       username : formData.username,
       password : formData.password
@@ -168,16 +177,13 @@ const Auth = () => {
     axios.post(`${API_URL}/${action}`, postData).then(
       (res)=>{
         if(res.data.success){
-          console.log(res.data)
           if(action==='register'){
             toastify('success', res.data.message)
             setIsLogin(true)
           }
           else{
             sessionStorage.setItem('username', formData.username)
-            window.location.href = '/todo'
-
-            
+            navigate('/todo')
           }
         }
         else{
@@ -186,7 +192,6 @@ const Auth = () => {
       }
     ).catch(
       (err)=>{
-        console.error(err)
         toastify('error', 'Something went wrong!!')
       }
     )

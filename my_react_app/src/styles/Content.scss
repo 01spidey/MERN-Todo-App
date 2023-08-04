@@ -330,8 +330,10 @@
         white-space: nowrap;
         transition: .15s ease;
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        position: relative;
         
-
         .top-box{
             .temp{
                 border-bottom: 1px dashed white;
@@ -430,6 +432,16 @@
                 // &:hover{
                 //     color: #2196f3;
                 // }
+            }
+
+            .last-item{
+                color: white;
+                background-color: red;
+                &:hover{
+                    color: white;
+                    background-color: red;
+                    opacity: .75;
+                }
             }
         }
     }
