@@ -5,6 +5,8 @@ import axios from 'axios'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
+import {Puff} from  'react-loader-spinner'
+import {InfinitySpin } from  'react-loader-spinner'
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true)
@@ -22,11 +24,7 @@ const Auth = () => {
     }
   )
   
-  // useState({
-  //   username:'',
-  //   password:'',
-  //   confirmPassword:''
-  // })
+  const [loader, setLoader] = useState(false)
 
   const [errorData, setErrorData] = useState({
     username:'',
@@ -175,8 +173,10 @@ const Auth = () => {
       password : formData.password
     }
 
+    setLoader(true)
     axios.post(`${API_URL}/${action}`, postData).then(
       (res)=>{
+        setLoader(false)
         if(res.data.success){
           if(action==='register'){
             toastify('success', res.data.message)
@@ -193,6 +193,7 @@ const Auth = () => {
       }
     ).catch(
       (err)=>{
+        setLoader(false)
         toastify('error', 'Something went wrong!!')
       }
     )
@@ -203,6 +204,13 @@ const Auth = () => {
     <div className="hero-box">
         
         <ToastContainer />
+        {
+            loader?
+              <div className="loader">
+                <Puff  width='200' color="#7c5cfc"/>
+              </div>:null
+          }
+        
 
         <div className="left">
             <img src={tasks} alt="hero-img" />

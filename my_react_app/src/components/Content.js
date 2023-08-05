@@ -8,7 +8,7 @@ import axios from 'axios';
 import { IoMdListBox } from 'react-icons/io';
 import {IoLogOut} from 'react-icons/io5'
 import { HiMenu } from 'react-icons/hi';
-// import {InfinitySpin } from  'react-loader-spinner'
+import {Puff} from  'react-loader-spinner'
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -21,7 +21,6 @@ const Content = () => {
     const [listItems, setListItems] = useState([])
     const [deletePopup, setDeletePopup] = useState(null)
     const [showPopup, setShowPopup] = useState(false)
-    // const [toastrMessage, setToastrMessage] = useState(null)
     
     const [addTaskPopup, setAddTaskPopup] = useState(false)
     const [taskPopupAction, setTaskPopupAction] = useState('add')
@@ -35,7 +34,7 @@ const Content = () => {
 
     const [curListItem, setCurListItem] = useState(null)
     const [showSideBar, setShowSideBar] = useState(true)
-    // const [loader, setLoader] = useState(false)
+    const [loader, setLoader] = useState(false)
 
     
     // const API_URL = 'http://localhost:4000'
@@ -52,7 +51,6 @@ const Content = () => {
         }else{
           setUsername(username)
           getLists(1)
-          toastify('success', `Welcome ${username}`)
         }
       }else{
         navigate('/')
@@ -83,9 +81,10 @@ const Content = () => {
 
     const getLists = (lst_id) => {
       try{
-        // console.log(username)
+        setLoader(true)
         axios.get(`${API_URL}/getLists/${username}`).then(
             (res)=> {
+              setLoader(false)
               let cur_lst = res.data.lists
               setListItems(cur_lst)
               let index = Math.max(0, lst_id-1)
@@ -93,7 +92,10 @@ const Content = () => {
               
             }
         ).catch(
-          err=> console.log(err)
+          err=>{
+            setLoader(false)
+            console.log(err)
+          }
         )
       }
       catch(err){
@@ -102,9 +104,10 @@ const Content = () => {
     }
 
     const handleTask = (target_task, action) => {
-
+      setLoader(true)
       axios.put(`${API_URL}/handleTask`, {id :(target_task.id-1), list_id : curListItem.original_id, action : action}).then(
         (res)=>{
+          setLoader(false)
           if(res.data.success){
             // console.log(res.data); 
             getTasksofList(curListItem)
@@ -112,16 +115,20 @@ const Content = () => {
         }
       )
       .catch(
-        (err)=> console.log(err)
+        (err)=> {
+          setLoader(false)
+          console.log(err)}
       )
 
     }
 
     // Delete Task - Toasted
     const deleteTask = ()=>{
+      setLoader(true)
       axios.delete(`${API_URL}/deleteTask/${curListItem.original_id}/${deletePopup.item.original_id}`)
       .then(
         (res)=> {
+          setLoader(false)
           if(res.data.success){
             toastify('error', res.data.message)
             getTasksofList(curListItem)
@@ -131,6 +138,7 @@ const Content = () => {
         }
       ).catch(
         (err)=>{
+          setLoader(false)
           toastify('error', 'Server Not Responding')
           console.log(err)
         }
@@ -141,9 +149,11 @@ const Content = () => {
 
     // Delete List - Toasted
     const deleteList = ()=>{
+      setLoader(true)
       axios.delete(`${API_URL}/deleteList/${deletePopup.item.original_id}`)
       .then(
         (res)=> {
+          setLoader(false)
           if(res.data.success){
             toastify('error', res.data.message)
             getLists(deletePopup.item.id-1)
@@ -153,6 +163,7 @@ const Content = () => {
         }
       ).catch(
         (err)=>{
+          setLoader(false)
           toastify('error', 'Server Not Responding')
           console.log(err)
         }
@@ -191,19 +202,23 @@ const Content = () => {
       }
 
       if(action==='add'){
+        setLoader(true)
         axios.post(`${API_URL}/addTask`, postData).then(
-          (res)=> {toastify('success', res.data.message) ; getTasksofList(curListItem)}
+          (res)=> {setLoader(false); toastify('success', res.data.message) ; getTasksofList(curListItem)}
         ).catch(
           (err)=>{
+            setLoader(false)
             toastify('error', 'Server Not Responding!!')
             console.log(err)
           }
         )
 
       }else{
+        setLoader(true)
         axios.put(`${API_URL}/updateTask`, putData)
         .then(
           (res)=> {
+            setLoader(false)
             if(res.data.success){
               toastify('success', res.data.message)
               getTasksofList(curListItem)
@@ -213,7 +228,8 @@ const Content = () => {
             
           }
         ).catch(
-          (err)=>{ 
+          (err)=>{
+            setLoader(false) 
             toastify('error', 'Server Not Responding!!')
             console.log(err)
           }
@@ -234,8 +250,10 @@ const Content = () => {
       }
 
       if(action==='add'){
+        setLoader(true)
         axios.post(`${API_URL}/addList`, list_obj).then(
           (res)=> {
+            setLoader(false)
             if(res.data.success){
               setAddListPopup(false)
               setShowPopup(false)
@@ -248,6 +266,7 @@ const Content = () => {
           }
         ).catch(
           (err)=>{
+            setLoader(false)
             toastify('error', 'Server Not Responding!!')
             console.log(err)
           }
@@ -255,9 +274,11 @@ const Content = () => {
       }
       
       else{
+        setLoader(true)
         axios.put(`${API_URL}/updateList`, {list_id : list_id, name : newList.trim()})
         .then(
           (res)=> {
+            setLoader(false)
             if(res.data.success){
               getLists(curListItem.id)
               setAddListPopup(false)
@@ -270,6 +291,7 @@ const Content = () => {
           }
         ).catch(
           (err)=> {
+            setLoader(false)
             toastify('error', 'Server Not Responding!!')
             console.log(err)
           }
@@ -279,13 +301,18 @@ const Content = () => {
   
     const getTasksofList = (listItem)=>{
       setCurListItem(listItem)
-      
+      setLoader(true)
       axios.get(`${API_URL}/getTasks/${listItem.original_id}`).then(
         (res)=>{ 
+          setLoader(false)
           setItems(res.data.tasks);
         }
       ).catch(
-        err=> toastify('error', 'Server Not Responding!!')
+        err=>{
+          setLoader(false)
+          console.log(err)
+          toastify('error', 'Server Not Responding!!')
+        }
       )
     }
 
@@ -305,16 +332,22 @@ const Content = () => {
       )
       // setItems(itemsCopy)
 
+      setLoader(true)
       axios.put(`${API_URL}/reorderTasks`, {list_id : curListItem.original_id, tasks : itemsCopy})
       .then(
         (res)=> {
+          setLoader(false)
           if(res.data.success){
             console.log(res); 
             getTasksofList(curListItem)
           }else console.log(res.data.message)
         }
       ).catch(
-        (err)=> console.log(err)
+        (err)=>{
+          setLoader(false)
+          toastify('error', 'Server Not Responding!!')
+          console.log(err)
+        }
       )
 
     }
@@ -345,6 +378,7 @@ const Content = () => {
           <div className="add-list no-select" onClick={
             ()=>{
               setNewList('')
+              setDeletePopup(null);
               setShowPopup(true);
               setAddListPopup(true);
               setListPopupAction('add');}
@@ -431,14 +465,13 @@ const Content = () => {
 
       <div className="right-box">
         
-        
-
         {
           curListItem?
             <div>
               <div className="add-btn no-select" 
                 onClick={()=>{
                   setNewTask('')
+                  setDeletePopup(null)
                   setShowPopup(true);
                   setAddTaskPopup(true);
                   setTaskPopupAction('add');
@@ -455,6 +488,13 @@ const Content = () => {
             </div>
             
           :null
+        }
+
+        {
+          loader?
+            <div className="loader">
+              <Puff  width='200' color="#7c5cfc"/>
+            </div>:null
         }
         
         
@@ -535,13 +575,7 @@ const Content = () => {
       {
         showPopup?
           <div className="popup-container">
-            {/* {
-              loader?
-                <div className="loader">
-                  <InfinitySpin  width='200' color="#4fa94d" />
-                </div>:null
-            } */}
-
+            
             {
               deletePopup!==null?
 
