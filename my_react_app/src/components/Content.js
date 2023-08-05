@@ -132,8 +132,10 @@ const Content = () => {
           if(res.data.success){
             toastify('error', res.data.message)
             getTasksofList(curListItem)
+            setDeletePopup(null)
           }else{
             toastify('error', res.data.message)
+            setDeletePopup(null)
           }
         }
       ).catch(
@@ -141,6 +143,7 @@ const Content = () => {
           setLoader(false)
           toastify('error', 'Server Not Responding')
           console.log(err)
+          setDeletePopup(null)
         }
       )
 
@@ -157,8 +160,10 @@ const Content = () => {
           if(res.data.success){
             toastify('error', res.data.message)
             getLists(deletePopup.item.id-1)
+            setDeletePopup(null)
           }else{
             toastify('error', res.data.message)
+            setDeletePopup(null)
           }
         }
       ).catch(
@@ -166,6 +171,7 @@ const Content = () => {
           setLoader(false)
           toastify('error', 'Server Not Responding')
           console.log(err)
+          setDeletePopup(null)
         }
       )
 
@@ -413,6 +419,7 @@ const Content = () => {
                 }>
                   <FiEdit3 id='edit'  
                   onClick={()=>{
+                    setDeletePopup(null)
                     setShowPopup(true);
                     setAddListPopup(true);
                     setListPopupAction('edit');
