@@ -4,10 +4,8 @@ import Content from './components/Content';
 import Footer from './components/Footer';
 import Header from './components/Header';
 import { Routes, Route } from "react-router-dom";
-import ReactDOM from "react-dom/client";
 
 function App() {
-  const username = localStorage.getItem('username');
 
   return (   
     <div className='App'>

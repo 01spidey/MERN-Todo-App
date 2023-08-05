@@ -8,7 +8,7 @@ import axios from 'axios';
 import { IoMdListBox } from 'react-icons/io';
 import {IoLogOut} from 'react-icons/io5'
 import { HiMenu } from 'react-icons/hi';
-import {InfinitySpin } from  'react-loader-spinner'
+// import {InfinitySpin } from  'react-loader-spinner'
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -33,9 +33,9 @@ const Content = () => {
     const [newList, setNewList] = useState('')
     const [listToBeEdited, setListToBeEdited] = useState(0)
 
-    const [curListItem, setCurListItem] = useState('')
+    const [curListItem, setCurListItem] = useState(null)
     const [showSideBar, setShowSideBar] = useState(true)
-    const [loader, setLoader] = useState(false)
+    // const [loader, setLoader] = useState(false)
 
     
     const API_URL = 'http://localhost:4000'
@@ -46,7 +46,6 @@ const Content = () => {
 
       if(username){
         if(username==='null' || null){
-          // console.log('No User Found')
           navigate('/')
         }else{
           setUsername(username)
@@ -56,9 +55,6 @@ const Content = () => {
       }else{
         navigate('/')
       }
-       
-      
-      
     }, [])
 
     const toastify = (status, message) => {
@@ -138,15 +134,11 @@ const Content = () => {
         }
       )
 
-      setShowPopup(false)
-      // setDeletePopup(null)
-      
+      setShowPopup(false)      
     }
 
     // Delete List - Toasted
     const deleteList = ()=>{
-      let cur_id = deletePopup.item.id
-
       axios.delete(`${API_URL}/deleteList/${deletePopup.item.original_id}`)
       .then(
         (res)=> {
@@ -437,23 +429,32 @@ const Content = () => {
 
       <div className="right-box">
         
-        <div className="add-btn no-select" 
-          onClick={()=>{
-            setNewTask('')
-            setShowPopup(true);
-            setAddTaskPopup(true);
-            setTaskPopupAction('add');
-          }}>
-            <p>+</p>
-      
-        </div>
+        
 
-        <div className="title" style={{
-          display : 'flex', alignItems : 'center', gap : '5px'
-        }}>
-          <IoMdListBox color='#7c5cfc'/>
-          <p>{curListItem.name}</p>
-        </div>
+        {
+          curListItem?
+            <div>
+              <div className="add-btn no-select" 
+                onClick={()=>{
+                  setNewTask('')
+                  setShowPopup(true);
+                  setAddTaskPopup(true);
+                  setTaskPopupAction('add');
+                }}>
+                  <p>+</p>
+            
+              </div>
+              <div className="title" style={{
+                display : 'flex', alignItems : 'center', gap : '5px'
+              }}>
+                <IoMdListBox color='#7c5cfc'/>
+                <p>{curListItem.name}</p>
+              </div>
+            </div>
+            
+          :null
+        }
+        
         
       {
         items.length>0?
@@ -532,12 +533,12 @@ const Content = () => {
       {
         showPopup?
           <div className="popup-container">
-            {
+            {/* {
               loader?
                 <div className="loader">
                   <InfinitySpin  width='200' color="#4fa94d" />
                 </div>:null
-            }
+            } */}
 
             {
               deletePopup!==null?

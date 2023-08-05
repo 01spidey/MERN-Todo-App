@@ -3,8 +3,6 @@ import '../styles/Footer.scss'
 
 const Footer = () => {
 
-    const year = new Date().getFullYear()
-
     return (
         <div>
             <footer>

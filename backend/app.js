@@ -15,7 +15,9 @@ const bodyParser = require('body-parser')
 
 const app = express()
 const port = 4000
-const mongoURI = 'mongodb://0.0.0.0:27017/todo-db';
+const mongoURI = "mongodb+srv://01kumaran:Kumaran%40123@mycluster.ovlzkdu.mongodb.net/todo-db?retryWrites=true&w=majority";
+
+// const mongoURI = 'mongodb://0.0.0.0:27017/todo-db';
 
 app.use(express.json())
 app.use(cors())
