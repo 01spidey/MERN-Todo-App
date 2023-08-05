@@ -39,7 +39,7 @@ const Auth = () => {
   const [isValid, setisValid] = useState(false)
 
   // const API_URL = 'http://localhost:4000'
-  const API_URL = 'https://taskify-api-fqvf.onrender.com/'
+  const API_URL = 'https://taskify-api-fqvf.onrender.com'
 
   const toastify = (status, message) => {
     
