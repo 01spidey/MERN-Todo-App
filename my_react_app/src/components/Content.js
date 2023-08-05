@@ -330,7 +330,7 @@ const Content = () => {
       itemsCopy.forEach(
         (item)=> item.id = a++
       )
-      // setItems(itemsCopy)
+      setItems(itemsCopy)
 
       setLoader(true)
       axios.put(`${API_URL}/reorderTasks`, {list_id : curListItem.original_id, tasks : itemsCopy})
