@@ -38,7 +38,9 @@ const Content = () => {
     // const [loader, setLoader] = useState(false)
 
     
-    const API_URL = 'http://localhost:4000'
+    // const API_URL = 'http://localhost:4000'
+    const API_URL = 'https://taskify-api-fqvf.onrender.com/'
+
     const [username, setUsername] = useState(sessionStorage.getItem('username'))
     const navigate = useNavigate()
 
